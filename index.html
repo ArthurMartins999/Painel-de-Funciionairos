@@ -1,379 +1,733 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+
+<html lang="pt-BR">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VF26 | Dashboard Responsivo</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Painel Pro - Figurinhas</title>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
     <style>
-        :root { --gold: #D4AF37; }
-        body { background-color: #000; color: #fff; overflow-x: hidden; }
-        
-        .sidebar {
-            transition: all 0.3s ease-in-out;
-            z-index: 50;
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+
+            background-color: #0a0a0a;
+
+            color: #e0e0e0;
+
+            font-family: 'Segoe UI', Inter, Roboto, sans-serif;
+
+            padding: 20px;
+
         }
 
-        /* No celular, o menu começa fora da tela */
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); position: fixed; height: 100vh; width: 280px; }
-            .sidebar.active { transform: translateX(0); }
-            .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 40; }
-            .overlay.active { display: block; }
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        header { text-align: center; margin-bottom: 20px; padding-bottom: 10px; }
+
+        header h1 { color: #00e676; font-size: 28px; text-transform: uppercase; letter-spacing: 1px; }
+
+        header p { color: #888; font-size: 14px; margin-top: 5px; }
+
+
+
+        /* Navegação (Tabs) */
+
+        .nav-menu {
+
+            display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 1px solid #222; padding-bottom: 10px;
+
+            justify-content: center;
+
         }
 
-        .cup-gradient { background: linear-gradient(90deg, #009639, #FFDF00, #002776); }
-        .glass { background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(212, 175, 55, 0.1); }
-        
-        /* Estilo Figurinha */
-        .card-fig { background: #0a0a0a; border: 1px solid rgba(212, 175, 55, 0.2); position: relative; }
-        .card-fig::after {
-            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(212,175,55,0.05), transparent);
-            animation: shine 4s infinite;
+        .tab-btn {
+
+            background-color: #141414; color: #888; border: 1px solid #222; padding: 12px 24px;
+
+            border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s;
+
+            font-size: 15px; text-transform: uppercase; letter-spacing: 1px; width: auto;
+
         }
-        @keyframes shine { 100% { left: 200%; } }
+
+        .tab-btn:hover { color: #fff; border-color: #444; background-color: #1a1a1a; }
+
+        .tab-btn.active {
+
+            color: #00e676; border-color: #00e676; background-color: rgba(0, 230, 118, 0.1);
+
+            box-shadow: 0 0 15px rgba(0, 230, 118, 0.2);
+
+        }
+
+
+
+        /* Controle de Exibição das Abas */
+
+        .view-section { display: none; animation: fadeIn 0.4s ease; }
+
+        .view-section.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+
+
+        /* Módulos e Cards */
+
+        .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+
+        @media (min-width: 768px) { .dashboard-grid { grid-template-columns: 1fr 1fr; } .full-width { grid-column: span 2; } }
+
+        .metrics-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+
+        
+
+        .metric-card {
+
+            background-color: #141414; border: 1px solid #222; border-radius: 8px; padding: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+
+        }
+
+        .metric-card h3 { font-size: 12px; text-transform: uppercase; color: #888; margin-bottom: 5px; }
+
+        .metric-card p { font-size: 20px; font-weight: bold; }
+
+        
+
+        .metric-sales { color: #00e676; border-bottom: 3px solid #00e676; }
+
+        .metric-expenses { color: #ff5252; border-bottom: 3px solid #ff5252; }
+
+        .metric-profit { color: #00b0ff; border-bottom: 3px solid #00b0ff; }
+
+        
+
+        /* Cores exclusivas para o menu Geral */
+
+        .geral-sales { color: #b2ff59; border-bottom: 3px solid #b2ff59; }
+
+        .geral-expenses { color: #ff8a80; border-bottom: 3px solid #ff8a80; }
+
+        .geral-profit { color: #84ffff; border-bottom: 3px solid #84ffff; }
+
+
+
+        .card { background-color: #141414; border: 1px solid #222; border-radius: 10px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+
+        .card h2 { font-size: 18px; color: #fff; margin-bottom: 15px; border-left: 4px solid #00e676; padding-left: 10px; }
+
+        .card-historico h2 { border-left: 4px solid #ff9100; }
+
+        .card-estoque h2 { border-left: 4px solid #b000ff; }
+
+
+
+        /* Formulários */
+
+        .form-group { margin-bottom: 12px; }
+
+        label { display: block; font-size: 12px; color: #aaa; margin-bottom: 5px; }
+
+        input, select {
+
+            width: 100%; padding: 10px; background-color: #1f1f1f; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 14px; transition: all 0.3s ease;
+
+        }
+
+        input:focus, select:focus { border-color: #00e676; box-shadow: 0 0 10px rgba(0, 230, 118, 0.4); outline: none; }
+
+
+
+        button {
+
+            width: 100%; padding: 12px; background-color: #00e676; color: #000; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+
+        }
+
+        button:hover { background-color: #00c853; box-shadow: 0 0 12px rgba(0, 230, 118, 0.6); }
+
+        button:active { transform: scale(0.98); }
+
+        .btn-danger { background-color: #ff5252; color: white; }
+
+        .btn-danger:hover { background-color: #d50000; box-shadow: 0 0 12px rgba(255, 82, 82, 0.6); }
+
+        .btn-action { background-color: #00b0ff; color: #000; margin-top: 10px;}
+
+        .btn-action:hover { background-color: #0091ea; box-shadow: 0 0 12px rgba(0, 176, 255, 0.6); }
+
+
+
+        /* Tabelas */
+
+        .data-table-container { max-height: 250px; overflow-y: auto; margin-top: 15px; border: 1px solid #222; border-radius: 6px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+
+        th { background-color: #1f1f1f; color: #aaa; padding: 8px; position: sticky; top: 0; }
+
+        td { padding: 8px; border-bottom: 1px solid #222; background-color: #141414; }
+
+        .btn-delete { background: none; border: none; color: #ff5252; cursor: pointer; font-size: 12px; padding: 2px 5px; width: auto; display: inline-block; box-shadow: none;}
+
+        .btn-delete:hover { text-decoration: underline; background: none; box-shadow: none; }
+
+
+
+        /* Estoque */
+
+        .estoque-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+
+        .estoque-item { background-color: #1f1f1f; padding: 10px; border-radius: 6px; text-align: center; border: 1px solid #333; }
+
+        .estoque-item span { display: block; font-size: 12px; color: #888; }
+
+        .estoque-item input { text-align: center; font-size: 18px; font-weight: bold; background: transparent; border: none; padding: 5px 0; color: #fff; box-shadow: none; }
+
+        .estoque-item input:focus { box-shadow: none; color: #00e676;}
+
+
+
+        /* Gráficos */
+
+        .chart-container { position: relative; height: 250px; width: 100%; }
+
+
+
+        /* Toasts */
+
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+
+        .toast {
+
+            background-color: #222; color: #fff; padding: 15px 20px; border-radius: 8px; font-size: 14px; font-weight: 500;
+
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5); transform: translateX(120%); opacity: 0; border-left: 5px solid #00e676;
+
+            animation: slideInToast 0.4s forwards, fadeOutToast 0.4s 2.6s forwards;
+
+        }
+
+        .toast.error { border-left-color: #ff5252; }
+
+        .toast.info { border-left-color: #00b0ff; }
+
+        @keyframes slideInToast { to { transform: translateX(0); opacity: 1; } }
+
+        @keyframes fadeOutToast { to { transform: translateX(120%); opacity: 0; } }
+
+
+
+        .admin-actions { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 10px; }
+
+        .badge-lucro { background-color: rgba(0, 230, 118, 0.2); color: #00e676; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+
+        .badge-prejuizo { background-color: rgba(255, 82, 82, 0.2); color: #ff5252; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+
+        .dia-semana { color: #888; font-size: 11px; text-transform: capitalize; display: block; }
+
     </style>
+
 </head>
-<body class="font-sans">
 
-    <!-- OVERLAY (SÓ MOBILE) -->
-    <div id="overlay" class="overlay" onclick="toggleMenu()"></div>
+<body>
 
-    <!-- LOGIN SCREEN -->
-    <div id="login-screen" class="fixed inset-0 flex items-center justify-center z-[100] bg-black p-4">
-        <div class="bg-[#0a0a0a] p-8 rounded-[30px] w-full max-w-sm border border-gold/20 text-center shadow-2xl">
-            <div class="w-16 h-16 bg-gold mx-auto mb-6 rounded-2xl flex items-center justify-center text-black font-black text-2xl italic shadow-lg shadow-gold/20">VF</div>
-            <h2 class="text-xl font-black text-white uppercase italic mb-6">Acesso ao Sistema</h2>
-            <div class="space-y-4 text-left">
-                <input type="text" id="user-input" placeholder="Usuário" class="w-full p-4 bg-black border border-white/10 rounded-xl focus:border-gold outline-none text-white">
-                <input type="password" id="pass-input" placeholder="Senha" class="w-full p-4 bg-black border border-white/10 rounded-xl focus:border-gold outline-none text-white">
-                <button onclick="fazerLogin()" class="w-full bg-gold text-black font-black py-4 rounded-xl uppercase italic hover:brightness-110">Entrar</button>
+
+
+    <div id="toast-container"></div>
+
+
+
+    <div class="container">
+
+        <header>
+
+            <h1>Controle Pro</h1>
+
+            <p>Gestão de Vendas, Caixa e Estoque</p>
+
+        </header>
+
+
+
+        <!-- MENU DE NAVEGAÇÃO -->
+
+        <nav class="nav-menu">
+
+            <button id="btn-tab-dia" class="tab-btn active" onclick="mudarAba('dia')">💵 Caixa do Dia</button>
+
+            <button id="btn-tab-geral" class="tab-btn" onclick="mudarAba('geral')">📊 Visão Geral & Histórico</button>
+
+        </nav>
+
+
+
+        <!-- ==================== ABA: CAIXA DO DIA ==================== -->
+
+        <div id="view-dia" class="view-section active">
+
+            <div class="metrics-container">
+
+                <div class="metric-card metric-sales">
+
+                    <h3>Vendas (Hoje)</h3>
+
+                    <p>R$ <span id="txt-total-vendas">0,00</span></p>
+
+                </div>
+
+                <div class="metric-card metric-expenses">
+
+                    <h3>Gastos (Hoje)</h3>
+
+                    <p>R$ <span id="txt-total-gastos">0,00</span></p>
+
+                </div>
+
+                <div class="metric-card metric-profit">
+
+                    <h3>Lucro Atual</h3>
+
+                    <p>R$ <span id="txt-lucro-liquido">0,00</span></p>
+
+                </div>
+
             </div>
-        </div>
-    </div>
 
-    <!-- MAIN APP -->
-    <div id="main-dashboard" class="flex min-h-screen hidden">
-        
-        <!-- SIDEBAR -->
-        <aside id="sidebar" class="sidebar w-72 bg-[#050505] border-r border-gold/10 flex flex-col shrink-0">
-            <div class="p-6 flex items-center justify-between border-b border-white/5">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-gold rounded flex items-center justify-center text-black font-black text-sm italic">VF</div>
-                    <span class="text-gold font-black text-xs uppercase tracking-widest">Figurinha 2026</span>
-                </div>
-                <!-- Botão para fechar no celular -->
-                <button onclick="toggleMenu()" class="md:hidden text-white p-2">✕</button>
-            </div>
-            
-            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-                <div class="p-4 rounded-xl bg-gold/10 text-gold font-bold text-xs uppercase">📊 Dashboard Live</div>
-                <div id="admin-menu" class="hidden pt-4 space-y-2 border-t border-white/5">
-                    <button onclick="gerarPDF()" class="w-full text-left p-4 rounded-xl text-emerald-400 text-[10px] font-bold border border-emerald-500/10 uppercase">📥 Baixar Relatório PDF</button>
-                </div>
-            </nav>
 
-            <div class="p-6 border-t border-white/5">
-                <p id="display-user" class="text-[10px] text-white/40 uppercase mb-4 font-bold"></p>
-                <button onclick="logout()" class="w-full py-3 rounded-xl border border-red-500/20 text-red-500 text-[9px] font-black hover:bg-red-500 hover:text-white transition uppercase">Encerrar Sessão</button>
-            </div>
-        </aside>
 
-        <!-- CONTENT AREA -->
-        <div class="flex-1 flex flex-col min-w-0">
-            
-            <!-- HEADER MOBILE -->
-            <header class="bg-[#050505] border-b border-gold/10 p-4 flex items-center justify-between sticky top-0 z-30">
-                <button onclick="toggleMenu()" class="p-2 bg-white/5 rounded-lg text-gold font-bold text-xs uppercase">☰ MENU</button>
-                <div id="total-empresa-area" class="hidden text-right">
-                    <p class="text-[8px] text-emerald-500 font-bold uppercase">Total Empresa</p>
-                    <h2 id="faturamento-total" class="text-sm font-black text-white">R$ 0,00</h2>
-                </div>
-            </header>
+            <div class="dashboard-grid">
 
-            <main class="p-4 md:p-8 space-y-6">
-                <!-- KPI CARDS -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                    <div class="card-fig p-5 rounded-2xl">
-                        <p class="text-white/40 text-[9px] font-bold uppercase mb-1">Minha Meta</p>
-                        <h3 id="meta-display" class="text-xl font-black">R$ 0,00</h3>
+                <div class="card full-width">
+
+                    <h2>Desempenho de Hoje</h2>
+
+                    <div class="chart-container">
+
+                        <canvas id="financeChartDia"></canvas>
+
                     </div>
-                    <div class="card-fig p-5 rounded-2xl border-l-4 border-l-blue-500">
-                        <p class="text-blue-400 text-[9px] font-bold uppercase mb-1">Minhas Vendas</p>
-                        <h3 id="vendas-user-display" class="text-xl font-black">R$ 0,00</h3>
-                    </div>
-                    <div id="card-comissao" class="hidden card-fig p-5 rounded-2xl border-l-4 border-l-emerald-500">
-                        <p class="text-emerald-400 text-[9px] font-bold uppercase mb-1">Comissão (20%)</p>
-                        <h3 id="comissao-display" class="text-xl font-black">R$ 0,00</h3>
-                        <p id="aviso-meta" class="text-[8px] text-white/30 mt-1 uppercase font-bold italic">Bloqueado</p>
-                    </div>
-                    <div class="card-fig p-5 rounded-2xl border-l-4 border-l-gold">
-                        <p class="text-gold text-[9px] font-bold uppercase mb-1 italic">Top Vendedor</p>
-                        <h3 id="lider-ranking" class="text-xl font-black uppercase italic truncate">---</h3>
-                    </div>
+
                 </div>
 
-                <!-- ACTIONS & CHARTS -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-1 space-y-6">
-                        <div class="glass p-6 rounded-[25px]">
-                            <h2 class="text-white font-black italic mb-6 uppercase text-[10px] tracking-widest">Novo Lançamento</h2>
-                            <div class="relative">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gold font-black italic">R$</span>
-                                <input type="number" id="valor-venda" placeholder="0,00" class="w-full p-4 bg-black border border-white/5 rounded-xl text-3xl font-black text-white pl-12 outline-none">
-                            </div>
-                            <button onclick="publicarVenda()" class="w-full mt-4 cup-gradient text-black font-black py-4 rounded-xl italic uppercase text-xs">Confirmar Venda</button>
-                        </div>
 
-                        <div id="area-dono" class="hidden glass p-6 rounded-[25px]">
-                            <h2 class="text-gold font-bold italic mb-4 uppercase text-[10px]">Gestor de Metas</h2>
-                            <select id="select-funcionario" class="w-full p-3 bg-black border border-white/10 rounded-lg mb-3 text-white text-xs">
-                                <option value="fonseca">FONSECA</option>
-                                <option value="alerrandro">ALERRANDRO</option>
-                                <option value="rafael">RAFAEL</option>
-                            </select>
-                            <input type="number" id="nova-meta" placeholder="Valor Meta R$" class="w-full p-3 bg-black border border-white/10 rounded-lg mb-3 text-white text-xs">
-                            <button onclick="definirMeta()" class="w-full bg-white text-black font-bold py-3 rounded-lg text-[10px] uppercase">Salvar Nova Meta</button>
-                        </div>
+
+                <div class="card">
+
+                    <h2>Registrar Venda</h2>
+
+                    <div class="form-group">
+
+                        <label>Valor Recebido (R$)</label>
+
+                        <input type="number" id="venda-valor" step="0.01" placeholder="Ex: 15.00">
+
                     </div>
 
-                    <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="glass p-6 rounded-[25px] flex flex-col items-center">
-                            <h2 class="text-[9px] font-bold uppercase mb-4 text-white/30">Divisão de Mercado</h2>
-                            <div class="h-48 w-full">
-                                <canvas id="chartPizza"></canvas>
-                            </div>
-                        </div>
-                        <div class="glass p-6 rounded-[25px] space-y-4">
-                            <h2 class="text-[9px] font-bold uppercase mb-2 text-white/30">Progresso da Equipe</h2>
-                            <div id="ranking-lista" class="space-y-4"></div>
-                        </div>
-                    </div>
-                </div>
+                    <div class="form-group">
 
-                <!-- HISTORICO -->
-                <div class="glass p-6 rounded-[25px] overflow-hidden">
-                    <h2 class="text-[10px] font-black uppercase mb-6 text-gold italic">Log de Vendas Real-Time</h2>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-[11px]" id="tabela-print">
-                            <thead class="text-white/20 uppercase">
-                                <tr class="border-b border-white/5">
-                                    <th class="py-3 px-2">Atleta</th>
-                                    <th class="py-3 px-2">Valor</th>
-                                    <th class="py-3 px-2 text-right">Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabela-vendas" class="font-bold"></tbody>
+                        <label>Observação / Detalhes</label>
+
+                        <input type="text" id="venda-obs" placeholder="Ex: 3 normais + 1 brilhante">
+
+                    </div>
+
+                    <button onclick="adicionarVenda()">Adicionar Venda</button>
+
+
+
+                    <div class="data-table-container">
+
+                        <table>
+
+                            <thead><tr><th>Hora</th><th>Detalhes</th><th>Valor</th><th>Ação</th></tr></thead>
+
+                            <tbody id="lista-vendas"></tbody>
+
                         </table>
+
                     </div>
+
                 </div>
-            </main>
+
+
+
+                <div class="card">
+
+                    <h2>Registrar Gasto</h2>
+
+                    <div class="form-group">
+
+                        <label>Valor Pago (R$)</label>
+
+                        <input type="number" id="gasto-valor" step="0.01" placeholder="Ex: 20.00">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Descrição do Gasto</label>
+
+                        <input type="text" id="gasto-desc" placeholder="Ex: 4 pacotinhos, Uber">
+
+                    </div>
+
+                    <button onclick="adicionarGasto()" class="btn-danger">Adicionar Gasto</button>
+
+
+
+                    <div class="data-table-container">
+
+                        <table>
+
+                            <thead><tr><th>Hora</th><th>Descrição</th><th>Valor</th><th>Ação</th></tr></thead>
+
+                            <tbody id="lista-gastos"></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="card full-width" style="border-color: #ff9100;">
+
+                    <h2 style="border-left-color: #ff9100;">Encerrar Expediente</h2>
+
+                    <p style="color: #aaa; font-size: 13px; margin-bottom: 10px;">Clique aqui ao final do dia para salvar os resultados no histórico e zerar o caixa para amanhã.</p>
+
+                    <button onclick="encerrarDia()" style="background-color: #ff9100; color: #fff;">🔒 Fechar Caixa de Hoje</button>
+
+                </div>
+
+            </div>
+
         </div>
+
+
+
+        <!-- ==================== ABA: VISÃO GERAL & HISTÓRICO ==================== -->
+
+        <div id="view-geral" class="view-section">
+
+            
+
+            <h2 style="color: #fff; margin-bottom: 15px; font-size: 20px;">Acumulado de Todo o Tempo (Histórico + Hoje)</h2>
+
+            <div class="metrics-container">
+
+                <div class="metric-card geral-sales">
+
+                    <h3>Faturamento Total</h3>
+
+                    <p>R$ <span id="txt-geral-vendas">0,00</span></p>
+
+                </div>
+
+                <div class="metric-card geral-expenses">
+
+                    <h3>Custo Total</h3>
+
+                    <p>R$ <span id="txt-geral-gastos">0,00</span></p>
+
+                </div>
+
+                <div class="metric-card geral-profit">
+
+                    <h3>Lucro Total Histórico</h3>
+
+                    <p>R$ <span id="txt-geral-lucro">0,00</span></p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="dashboard-grid">
+
+                
+
+                <div class="card full-width card-estoque">
+
+                    <h2>Controle de Estoque</h2>
+
+                    <div class="estoque-grid">
+
+                        <div class="estoque-item" style="border-top: 3px solid #00e676;">
+
+                            <span>Normais</span><input type="number" id="est-normais" value="0" onchange="salvarEstoque()">
+
+                        </div>
+
+                        <div class="estoque-item" style="border-top: 3px solid #ff007f;">
+
+                            <span>Brilhantes</span><input type="number" id="est-brilhantes" value="0" onchange="salvarEstoque()">
+
+                        </div>
+
+                        <div class="estoque-item" style="border-top: 3px solid #00b0ff;">
+
+                            <span>Craques</span><input type="number" id="est-craques" value="0" onchange="salvarEstoque()">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="card full-width card-historico">
+
+                    <h2>Histórico de Fechamentos Diários</h2>
+
+                    <div class="data-table-container">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Data</th>
+
+                                    <th>Faturamento</th>
+
+                                    <th>Gastos</th>
+
+                                    <th>Resultado Líquido</th>
+
+                                    <th>Ação</th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="lista-historico">
+
+                                <!-- Preenchido dinamicamente -->
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="card full-width">
+
+                    <h2>Exportação de Dados</h2>
+
+                    <button onclick="exportarCSV()" class="btn-action">📥 Baixar Relatório Completo (CSV Excel)</button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // CONFIGURAÇÃO DO FIREBASE (Sua DB)
-        const firebaseConfig = {
-            apiKey: "AIzaSyD01s35w-vJrhLmYbxtD5xFkeCsAV_eak4",
-            authDomain: "estudos-de-ia-e59fb.firebaseapp.com",
-            databaseURL: "https://estudos-de-ia-e59fb-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "estudos-de-ia-e59fb",
-        };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        let myChart = null;
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-        // CONTROLE DO MENU
-        window.toggleMenu = function() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('overlay').classList.toggle('active');
+    const firebaseConfig = {
+        apiKey: "AIzaSyD01s35w-vJrhLmYbxtD5xFkeCsAV_eak4",
+        authDomain: "estudos-de-ia-e59fb.firebaseapp.com",
+        databaseURL: "https://estudos-de-ia-e59fb-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "estudos-de-ia-e59fb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Estrutura inicial garantida para evitar erros de undefined
+    let dados = { 
+        vendas: [], 
+        gastos: [], 
+        estoque: { normais: 0, brilhantes: 0, craques: 0 }, 
+        historico_dias: [] 
+    };
+    let chartDia;
+
+    // Sincronização em tempo real
+    onValue(ref(db, 'painel_figurinhas'), (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            dados = {
+                vendas: data.vendas || [],
+                gastos: data.gastos || [],
+                estoque: data.estoque || { normais: 0, brilhantes: 0, craques: 0 },
+                historico_dias: data.historico_dias || []
+            };
         }
+        atualizarInterface();
+    });
 
-        const usuarios = {
-            "arthur": { senha: "arthur2325", cargo: "dono" },
-            "sasse": { senha: "sasse2026", cargo: "dono" },
-            "fonseca": { senha: "fonseca2026", cargo: "funcionario" },
-            "alerrandro": { senha: "alerrandro2020", cargo: "funcionario" },
-            "rafael": { senha: "rafael123", cargo: "funcionario" }
-        };
+    // --- EXPONDO FUNÇÕES PARA O HTML ---
+    window.mudarAba = mudarAba;
+    window.adicionarVenda = adicionarVenda;
+    window.adicionarGasto = adicionarGasto;
+    window.salvarEstoque = salvarEstoque;
+    window.removerItem = removerItem;
+    window.removerHistorico = removerHistorico;
+    window.encerrarDia = encerrarDia;
+    window.exportarCSV = exportarCSV;
 
-        window.fazerLogin = function() {
-            const user = document.getElementById('user-input').value.toLowerCase().trim();
-            const pass = document.getElementById('pass-input').value;
-            if (usuarios[user] && usuarios[user].senha === pass) {
-                localStorage.setItem('usuarioLogado', user);
-                localStorage.setItem('cargo', usuarios[user].cargo);
-                location.reload(); 
-            } else { alert("ACESSO NEGADO."); }
+    // --- LÓGICA DO SISTEMA ---
+    function salvarNoStorage() {
+        set(ref(db, 'painel_figurinhas'), dados);
+    }
+
+    function atualizarInterface() {
+        if (!dados.vendas) dados.vendas = [];
+        if (!dados.gastos) dados.gastos = [];
+        
+        let totalVendasHoje = dados.vendas.reduce((sum, item) => sum + (Number(item.valor) || 0), 0);
+        let totalGastosHoje = dados.gastos.reduce((sum, item) => sum + (Number(item.valor) || 0), 0);
+        let lucroHoje = totalVendasHoje - totalGastosHoje;
+
+        document.getElementById('txt-total-vendas').innerText = totalVendasHoje.toFixed(2).replace('.', ',');
+        document.getElementById('txt-total-gastos').innerText = totalGastosHoje.toFixed(2).replace('.', ',');
+        document.getElementById('txt-lucro-liquido').innerText = lucroHoje.toFixed(2).replace('.', ',');
+
+        let histVendas = (dados.historico_dias || []).reduce((sum, dia) => sum + Number(dia.vendas || 0), 0);
+        let histGastos = (dados.historico_dias || []).reduce((sum, dia) => sum + Number(dia.gastos || 0), 0);
+        let histLucro = (dados.historico_dias || []).reduce((sum, dia) => sum + Number(dia.lucro || 0), 0);
+
+        document.getElementById('txt-geral-vendas').innerText = (histVendas + totalVendasHoje).toFixed(2).replace('.', ',');
+        document.getElementById('txt-geral-gastos').innerText = (histGastos + totalGastosHoje).toFixed(2).replace('.', ',');
+        document.getElementById('txt-geral-lucro').innerText = (histLucro + lucroHoje).toFixed(2).replace('.', ',');
+
+        document.getElementById('est-normais').value = dados.estoque.normais;
+        document.getElementById('est-brilhantes').value = dados.estoque.brilhantes;
+        document.getElementById('est-craques').value = dados.estoque.craques;
+
+        renderizarTabelas();
+        renderizarHistorico();
+        
+        if(chartDia) { 
+            chartDia.data.datasets[0].data = [totalVendasHoje, totalGastosHoje, lucroHoje]; 
+            chartDia.update(); 
         }
+    }
 
-        window.logout = function() { localStorage.clear(); location.reload(); }
+    function mudarAba(aba) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(`view-${aba}`).classList.add('active');
+        document.getElementById(`btn-tab-${aba}`).classList.add('active');
+    }
 
-        function initDashboard() {
-            const user = localStorage.getItem('usuarioLogado');
-            const cargo = localStorage.getItem('cargo');
-            if (!user) {
-                document.getElementById('login-screen').classList.remove('hidden');
-                return;
-            }
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerText = message;
+        container.appendChild(toast);
+        setTimeout(() => { toast.remove(); }, 3000);
+    }
 
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('main-dashboard').classList.remove('hidden');
-            document.getElementById('display-user').innerText = `Atleta: ${user}`;
+    function renderizarTabelas() {
+        document.getElementById('lista-vendas').innerHTML = dados.vendas.map((v, i) => `<tr><td>${v.data}</td><td>${v.obs}</td><td style="color: #00e676;">R$ ${Number(v.valor).toFixed(2)}</td><td><button class="btn-delete" onclick="removerItem('vendas', ${i})">❌</button></td></tr>`).join('');
+        document.getElementById('lista-gastos').innerHTML = dados.gastos.map((g, i) => `<tr><td>${g.data}</td><td>${g.desc}</td><td style="color: #ff5252;">R$ ${Number(g.valor).toFixed(2)}</td><td><button class="btn-delete" onclick="removerItem('gastos', ${i})">❌</button></td></tr>`).join('');
+    }
+    
+    function renderizarHistorico() {
+        const lista = dados.historico_dias || [];
+        if (lista.length === 0) { document.getElementById('lista-historico').innerHTML = `<tr><td colspan="5" style="text-align: center; color: #888;">Nenhum caixa encerrado ainda.</td></tr>`; return; }
+        let html = '';
+        [...lista].reverse().forEach((dia, indexInvertido) => {
+            let i = lista.length - 1 - indexInvertido; 
+            let lucro = Number(dia.lucro);
+            html += `<tr><td><strong>${dia.data}</strong><span class="dia-semana">${dia.diaSemana}</span></td><td>R$ ${Number(dia.vendas).toFixed(2)}</td><td>R$ ${Number(dia.gastos).toFixed(2)}</td><td><span class="${lucro >= 0 ? 'badge-lucro' : 'badge-prejuizo'}">R$ ${lucro.toFixed(2)}</span></td><td><button class="btn-delete" onclick="removerHistorico(${i})">❌</button></td></tr>`;
+        });
+        document.getElementById('lista-historico').innerHTML = html;
+    }
 
-            if (cargo === 'dono') {
-                document.getElementById('area-dono').classList.remove('hidden');
-                document.getElementById('total-empresa-area').classList.remove('hidden');
-                document.getElementById('admin-menu').classList.remove('hidden');
-            } else {
-                document.getElementById('card-comissao').classList.remove('hidden');
-            }
-            escutarDados();
+    function adicionarVenda() {
+        let valor = parseFloat(document.getElementById('venda-valor').value);
+        let obs = document.getElementById('venda-obs').value || 'Venda Geral';
+        if(!isNaN(valor) && valor > 0) {
+            let agora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            dados.vendas.push({ data: agora, obs: obs, valor: valor });
+            document.getElementById('venda-valor').value = ''; document.getElementById('venda-obs').value = '';
+            salvarNoStorage(); showToast(`✅ Venda registrada!`, 'success');
+        } else { showToast('❌ Insira um valor válido!', 'error'); }
+    }
+
+    function adicionarGasto() {
+        let valor = parseFloat(document.getElementById('gasto-valor').value);
+        let desc = document.getElementById('gasto-desc').value || 'Gasto Geral';
+        if(!isNaN(valor) && valor > 0) {
+            let agora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            dados.gastos.push({ data: agora, desc: desc, valor: valor });
+            document.getElementById('gasto-valor').value = ''; document.getElementById('gasto-desc').value = '';
+            salvarNoStorage(); showToast(`⚠️ Gasto registrado!`, 'error');
+        } else { showToast('❌ Insira um valor válido!', 'error'); }
+    }
+
+    function salvarEstoque() {
+        dados.estoque.normais = parseInt(document.getElementById('est-normais').value) || 0;
+        dados.estoque.brilhantes = parseInt(document.getElementById('est-brilhantes').value) || 0;
+        dados.estoque.craques = parseInt(document.getElementById('est-craques').value) || 0;
+        salvarNoStorage(); showToast('📦 Estoque atualizado!', 'info');
+    }
+
+    function removerItem(tipo, index) { dados[tipo].splice(index, 1); salvarNoStorage(); showToast('🗑️ Removido.', 'info'); }
+    
+    function removerHistorico(index) {
+        if(confirm("Tem certeza que deseja excluir o registro deste dia?")) { dados.historico_dias.splice(index, 1); salvarNoStorage(); showToast('🗑️ Histórico apagado.', 'info'); }
+    }
+
+    function encerrarDia() {
+        let totalVendas = dados.vendas.reduce((sum, item) => sum + Number(item.valor), 0);
+        let totalGastos = dados.gastos.reduce((sum, item) => sum + Number(item.valor), 0);
+        let lucro = totalVendas - totalGastos;
+        if (dados.vendas.length === 0 && dados.gastos.length === 0) { showToast('❌ O caixa já está zerado!', 'error'); return; }
+        if(confirm(`Deseja fechar o caixa de HOJE?`)) {
+            let hoje = new Date();
+            dados.historico_dias.push({ data: hoje.toLocaleDateString('pt-BR'), diaSemana: hoje.toLocaleDateString('pt-BR', { weekday: 'long' }), vendas: totalVendas, gastos: totalGastos, lucro: lucro });
+            dados.vendas = []; dados.gastos = [];
+            salvarNoStorage(); showToast('🔒 Caixa fechado!', 'success');
         }
+    }
 
-        window.publicarVenda = function() {
-            const valor = document.getElementById('valor-venda').value;
-            const user = localStorage.getItem('usuarioLogado');
-            if(!valor || valor <= 0) return;
+    function exportarCSV() {
+        let csvContent = "data:text/csv;charset=utf-8,HISTORICO GERAL\nData,Dia,Vendas,Gastos,Lucro\n";
+        (dados.historico_dias || []).forEach(d => { csvContent += `${d.data},${d.diaSemana},${d.vendas},${d.gastos},${d.lucro}\n`; });
+        const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", "relatorio.csv"); document.body.appendChild(link); link.click();
+    }
 
-            push(ref(db, 'vendas/'), {
-                vendedor: user,
-                valor: parseFloat(valor),
-                data: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
-                dataISO: new Date().toISOString().split('T')[0]
-            });
-            document.getElementById('valor-venda').value = "";
-        }
+    window.onload = function() {
+        const ctxDia = document.getElementById('financeChartDia').getContext('2d');
+        chartDia = new Chart(ctxDia, {
+            type: 'bar',
+            data: { labels: ['Faturamento', 'Gastos', 'Lucro'], datasets: [{ label: 'Hoje (R$)', data: [0,0,0], backgroundColor: ['rgba(0, 230, 118, 0.2)', 'rgba(255, 82, 82, 0.2)', 'rgba(0, 176, 255, 0.2)'], borderColor: ['#00e676', '#ff5252', '#00b0ff'], borderWidth: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    };
+</script>
 
-        window.apagarVenda = function(id) {
-            if(confirm("Confirmar estorno?")) remove(ref(db, 'vendas/' + id));
-        }
-
-        window.definirMeta = function() {
-            const func = document.getElementById('select-funcionario').value;
-            const meta = document.getElementById('nova-meta').value;
-            set(ref(db, 'metas/' + func), { valor: parseFloat(meta) });
-            alert("Meta atualizada.");
-        }
-
-        window.escutarDados = function() {
-            const userLogado = localStorage.getItem('usuarioLogado');
-            const cargo = localStorage.getItem('cargo');
-
-            onValue(ref(db, 'metas/'), (snapMetas) => {
-                const metas = snapMetas.val() || {};
-                document.getElementById('meta-display').innerText = `R$ ${(metas[userLogado]?.valor || 0).toLocaleString('pt-BR')}`;
-                
-                onValue(ref(db, 'vendas/'), (snapVendas) => {
-                    processarTudo(metas, snapVendas.val() || {}, userLogado, cargo);
-                });
-            });
-        }
-
-        function processarTudo(metas, vendas, userLogado, cargo) {
-            let totalGeral = 0;
-            let meuTotal = 0;
-            const totaisPorFunc = { fonseca:0, alerrandro:0, rafael:0 };
-            const tabela = document.getElementById('tabela-vendas');
-            tabela.innerHTML = "";
-
-            Object.entries(vendas).reverse().forEach(([id, v]) => {
-                totalGeral += v.valor;
-                if(v.vendedor === userLogado) meuTotal += v.valor;
-                if(totaisPorFunc[v.vendedor] !== undefined) totaisPorFunc[v.vendedor] += v.valor;
-
-                tabela.innerHTML += `
-                    <tr class="border-b border-white/5">
-                        <td class="py-4 px-2 text-gold italic uppercase">${v.vendedor}</td>
-                        <td class="py-4 px-2">R$ ${v.valor.toLocaleString('pt-BR')}</td>
-                        <td class="py-4 px-2 text-right">
-                            ${cargo === 'dono' ? `<button onclick="apagarVenda('${id}')" class="text-red-500 font-black">X</button>` : `<span class="text-white/20">${v.data}</span>`}
-                        </td>
-                    </tr>
-                `;
-            });
-
-            document.getElementById('faturamento-total').innerText = `R$ ${totalGeral.toLocaleString('pt-BR')}`;
-            document.getElementById('vendas-user-display').innerText = `R$ ${meuTotal.toLocaleString('pt-BR')}`;
-
-            if (cargo !== 'dono') {
-                const metaPessoal = metas[userLogado]?.valor || 0;
-                const comissaoCard = document.getElementById('comissao-display');
-                const avisoMeta = document.getElementById('aviso-meta');
-
-                if (metaPessoal > 0 && meuTotal >= metaPessoal) {
-                    comissaoCard.innerText = `R$ ${(meuTotal * 0.20).toLocaleString('pt-BR')}`;
-                    comissaoCard.classList.add('text-emerald-400');
-                    avisoMeta.innerText = "🏆 META ALCANÇADA!";
-                    avisoMeta.classList.add('text-emerald-500');
-                } else {
-                    comissaoCard.innerText = "R$ 0,00";
-                    avisoMeta.innerText = metaPessoal > 0 ? `Faltam R$ ${(metaPessoal - meuTotal).toLocaleString('pt-BR')}` : "Aguardando Meta";
-                }
-            }
-
-            const rankingDiv = document.getElementById('ranking-lista');
-            rankingDiv.innerHTML = "";
-            const ordenados = Object.entries(totaisPorFunc).sort((a,b) => b[1] - a[1]);
-            if(ordenados[0]) document.getElementById('lider-ranking').innerText = ordenados[0][0];
-
-            ordenados.forEach(([nome, total]) => {
-                const meta = metas[nome]?.valor || 1;
-                const perc = Math.min((total/meta)*100, 100).toFixed(0);
-                rankingDiv.innerHTML += `
-                    <div>
-                        <div class="flex justify-between text-[9px] uppercase font-bold mb-1">
-                            <span class="${nome === userLogado ? 'text-gold' : 'text-white/40'}">${nome}</span>
-                            <span>${perc}%</span>
-                        </div>
-                        <div class="w-full bg-white/5 h-1 rounded-full overflow-hidden">
-                            <div class="cup-gradient h-full transition-all duration-1000" style="width: ${perc}%"></div>
-                        </div>
-                    </div>
-                `;
-            });
-            atualizarGrafico(totaisPorFunc);
-        }
-
-        function atualizarGrafico(dados) {
-            const ctx = document.getElementById('chartPizza').getContext('2d');
-            if(myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(dados).map(n => n.toUpperCase()),
-                    datasets: [{
-                        data: Object.values(dados),
-                        backgroundColor: ['#009639', '#FFDF00', '#002776'],
-                        borderColor: '#000',
-                        borderWidth: 2
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-        }
-
-        window.gerarPDF = function() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text("RELATÓRIO DE VENDAS VF26", 14, 20);
-            doc.autoTable({ html: '#tabela-print', startY: 30 });
-            doc.save(`vendas_vf26.pdf`);
-        }
-
-        initDashboard();
-    </script>
 </body>
+
 </html>
